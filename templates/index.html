@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>亚马逊广告优化系统</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/antd/4.16.13/antd.min.css">
+  <style>
+    body {
+      background-color: #f0f2f5;
+      font-family: 'Alibaba PuHuiTi', Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+   .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+   .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+   .header h1 {
+      color: #1890ff;
+      font-size: 24px;
+      margin: 0;
+    }
+
+   .logo {
+      display: block;
+      margin: 0 auto 20px;
+      width: 200px;
+    }
+
+   .form-container {
+      background-color: white;
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+    }
+
+   .form-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+   .form-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+   .form-group label {
+      margin-bottom: 5px;
+      color: #666;
+    }
+
+   .form-group input,
+   .form-group select {
+      padding: 10px;
+      border: 1px solid #d9d9d9;
+      border-radius: 4px;
+      transition: all 0.3s;
+    }
+
+   .form-group input:focus,
+   .form-group select:focus {
+      border-color: #1890ff;
+      box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+    }
+
+   .form-group button {
+      padding: 10px;
+      background-color: #1890ff;
+      border: none;
+      color: white;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+   .form-group button:hover {
+      background-color: #40a9ff;
+    }
+
+   .download-link {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+   .download-link a {
+      display: inline-block;
+      padding: 10px 20px;
+      background-color: #1890ff;
+      color: white;
+      border-radius: 4px;
+      text-decoration: none;
+      transition: all 0.3s;
+    }
+
+   .download-link a:hover {
+      background-color: #40a9ff;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>亚马逊广告优化系统</h1>
+    </div>
+    <div class="form-container">
+      <form method="post" enctype="multipart/form-data">
+        <div class="form-grid">
+          <!-- 其他表单组 -->
+          <div class="form-group">
+            <label for="impress_threshold">展示量：</label>
+            <input type="number" id="impress_threshold" name="impress_threshold">
+          </div>
+          <div class="form-group">
+            <label for="click_threshold">点击量：</label>
+            <input type="number" id="click_threshold" name="click_threshold">
+          </div>
+          <div class="form-group">
+            <label for="click_rate_threshold">点击率：</label>
+            <input type="number" step="0.001" id="click_rate_threshold" name="click_rate_threshold">
+          </div>
+          <div class="form-group">
+            <label for="spend_threshold">花费：</label>
+            <input type="number" step="0.01" id="spend_threshold" name="spend_threshold">
+          </div>
+          <div class="form-group">
+            <label for="sales_threshold">销量：</label>
+            <input type="number" step="0.01" id="sales_threshold" name="sales_threshold">
+          </div>
+          <div class="form-group">
+            <label for="order_threshold">订单数量：</label>
+            <input type="number" id="order_threshold" name="order_threshold">
+          </div>
+          <div class="form-group">
+            <label for="conversion_threshold">转化率：</label>
+            <input type="number" step="0.01" id="conversion_threshold" name="conversion_threshold">
+          </div>
+          <div class="form-group">
+            <label for="acos_threshold">ACOS：</label>
+            <input type="number" step="0.01" id="acos_threshold" name="acos_threshold">
+          </div>
+          <div class="form-group">
+            <label for="cpc_threshold">CPC：</label>
+            <input type="number" step="0.01" id="cpc_threshold" name="cpc_threshold">
+          </div>
+          <div class="form-group">
+            <label for="roas_threshold">ROAS：</label>
+            <input type="number" step="0.01" id="roas_threshold" name="roas_threshold">
+          </div>
+          <div class="form-group">
+            <label for="sku">SKU：</label>
+            <input type="text" id="sku" name="sku">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="file">后台广告数据文件路径：</label>
+          <input type="file" id="file" name="file">
+        </div>
+        <div class="form-group">
+          <label for="file_old">对比数据（可选）：</label>
+          <input type="file" id="file_old" name="file_old">
+        </div>
+        <div class="form-group">
+          <label for="sp_function">SP广告优化：</label>
+          <select id="sp_function" name="sp_function">
+            <option value="SP商品筛选">SP商品筛选</option>
+            <option value="SP投放商品筛选">SP投放商品筛选</option>
+            <option value="SP投放关键词筛选">SP投放关键词筛选</option>
+            <option value="SP竞价调整">SP竞价调整</option>
+            <option value="SP搜索词筛选">SP搜索词筛选</option>
+            <option value="SP无效筛选">SP无效筛选</option>
+            <option value="SP花费下降">SP花费下降</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="sb_function">SB广告优化：</label>
+          <input type="text" id="sb_function" name="sb_function">
+        </div>
+        <div class="form-group">
+          <label for="sd_function">SD广告优化：</label>
+          <input type="text" id="sd_function" name="sd_function">
+        </div>
+        <div class="form-group">
+          <button type="submit">执行优化</button>
+        </div>
+      </form>
+      {% if download_link %}
+      <div class="download-link">
+        <a href="{{ url_for('download_file', filename=download_link) }}">下载优化后的文件</a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <script>
+    // 获取相关输入框元素
+    const spFunctionSelect = document.getElementById('sp_function');
+    const impressThresholdInput = document.getElementById('impress_threshold');
+    const clickThresholdInput = document.getElementById('click_threshold');
+    const clickrateThresholdInput = document.getElementById('click_rate_threshold');
+    const spendThresholdInput = document.getElementById('spend_threshold');
+    const salesThresholdInput = document.getElementById('sales_threshold');
+    const orderThresholdInput = document.getElementById('order_threshold');
+    const conversionThresholdInput = document.getElementById('conversion_threshold');
+    const acosThresholdInput = document.getElementById('acos_threshold');
+    const cpcThresholdInput = document.getElementById('cpc_threshold');
+    const roasThresholdInput = document.getElementById('roas_threshold');
+
+// 监听SP广告优化下拉菜单的改变事件
+// 定义一个变量来存储当前选中的SP功能类型
+let currentSPFunction = '';
+let previousFunction = '';
+
+// 监听SP广告优化下拉菜单的改变事件
+spFunctionSelect.addEventListener('input', function () {
+    const selectedValue = this.value;
+
+    // 先将上一个事件设置的值恢复为默认值（假设这里定义了默认值的函数）
+    resetPreviousFunctionValues();
+
+    if (selectedValue === 'SP商品筛选') {
+        clickThresholdInput.value = '28';
+        orderThresholdInput.value = '5';
+        conversionThresholdInput.value = '0.05';
+        acosThresholdInput.value = '0.65';
+        currentSPFunction = 'SP商品筛选';
+    } else if (selectedValue === 'SP投放商品筛选') {
+        spendThresholdInput.value = '30';
+        orderThresholdInput.value = '0';
+        conversionThresholdInput.value = '0.05';
+        acosThresholdInput.value = '0.50';
+        currentSPFunction = 'SP投放商品筛选';
+    } else if (selectedValue === 'SP投放关键词筛选') {
+        clickThresholdInput.value = '5';
+        clickrateThresholdInput.value = '0.002';
+        orderThresholdInput.value = '3';
+        conversionThresholdInput.value = '0.05';
+        currentSPFunction = 'SP投放关键词筛选';
+    } else if (selectedValue === 'SP竞价调整') {
+        spendThresholdInput.value = '30';
+        conversionThresholdInput.value = '0.05';
+        acosThresholdInput.value = '0.50';
+        currentSPFunction = 'SP竞价调整';
+    } else if (selectedValue === 'SP搜索词筛选') {
+        clickThresholdInput.value = '5';
+        clickrateThresholdInput.value = '0.002';
+        orderThresholdInput.value = '3';
+        conversionThresholdInput.value = '0.05';
+        currentSPFunction = 'SP搜索词筛选';
+    } else if (selectedValue === 'SP无效筛选') {
+        clickThresholdInput.value = '8';
+        currentSPFunction = 'SP无效筛选';
+    } else if (selectedValue === 'SP花费下降') {
+        spendThresholdInput.value = '10';
+        currentSPFunction = 'SP花费下降';
+    }
+
+    // 记录上一次的SP功能类型，并更新previousFunction
+    previousFunction = currentSPFunction;
+});
+
+// 定义一个函数用于将上一个事件设置的值恢复为默认值
+function resetPreviousFunctionValues() {
+    if (previousFunction === 'SP商品筛选') {
+        clickThresholdInput.value = '';
+        orderThresholdInput.value = '';
+        conversionThresholdInput.value = '';
+        acosThresholdInput.value = '';
+    } else if (previousFunction === 'SP投放商品筛选') {
+        spendThresholdInput.value = '';
+        orderThresholdInput.value = '';
+        conversionThresholdInput.value = '';
+        acosThresholdInput.value = '';
+    } else if (previousFunction === 'SP投放关键词筛选') {
+        clickThresholdInput.value = '';
+        clickrateThresholdInput.value = '';
+        orderThresholdInput.value = '';
+        conversionThresholdInput.value = '';
+    } else if (previousFunction === 'SP竞价调整') {
+        spendThresholdInput.value = '';
+        conversionThresholdInput.value = '';
+        acosThresholdInput.value = '';
+    } else if (previousFunction === 'SP搜索词筛选') {
+        clickThresholdInput.value = '';
+        clickrateThresholdInput.value = '';
+        orderThresholdInput.value = '';
+        conversionThresholdInput.value = '';
+    } else if (previousFunction === 'SP无效筛选') {
+        clickThresholdInput.value = '';
+    } else if (previousFunction === 'SP花费下降') {
+        spendThresholdInput.value = '';
+    }
+}
+  </script>
+</body>
+
+</html>
