@@ -17,7 +17,7 @@ def filter_data_helper(data, sku_filter, conditions, entity_level=None, is_sp_po
     :return: 筛选出满足条件的数据的DataFrame。
     """
     try:
-        if is_sp_pos or is_sp_word:
+        if is_sp_pos:
             base_conditions = (
                 (data["实体层级"] == entity_level) &
                 conditions
