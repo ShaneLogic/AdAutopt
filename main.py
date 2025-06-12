@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os
 import time
 import config
@@ -9,21 +10,22 @@ from werkzeug.utils import secure_filename
 from auto_adjust.auto_adjust import AutomationAdjustment
 from data_analysis.data_analysis import DataAnalysis
 
-# 文件清理配置
-UPLOAD_FOLDER = 'uploads'  # 上传文件的保存目录
-FILE_RETENTION_HOURS = 0.5  # 文件存活时间（小时）
+# File cleanup configuration
+UPLOAD_FOLDER = 'uploads'  # Directory for saving uploaded files
+FILE_RETENTION_HOURS = 0.5  # File retention time in hours
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
+# Create upload directory if it doesn't exist
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
-# 创建异步锁
+# Create async lock for file operations
 file_lock = asyncio.Lock()
 
-# 映射功能名称
-function_mapping = {
+# Function name mapping for different optimization tasks
+FUNCTION_MAPPING = {
     "SP商品筛选": "sp_product_screen",
     "SP投放商品筛选": "sp_advertise_screen",
     "SP投放关键词筛选": "sp_keyword_screen",
@@ -31,47 +33,51 @@ function_mapping = {
     "SP搜索词筛选": "sp_word_screen",
     "SP无效筛选": "sp_invalid_screen",
     "SP花费下降": "sp_descent_screen"
-    # 可以根据实际情况添加更多映射关系
 }
 
-
 class AmazonAdOptimizationSystem:
+    """Main system class for Amazon ad optimization"""
+    
     def __init__(self, file_path):
         self.file_path = file_path
         self.automation_adjustment = AutomationAdjustment(self.file_path)
         self.data_analysis = DataAnalysis()
 
     def run_optimization(self, sp_function=None, file_path_old=None, file_path_new=None):
-        actual_function_name = None
-        if sp_function and sp_function in function_mapping:
-            actual_function_name = function_mapping[sp_function]
-        
-        # 调用自动化调整模块
-        self.automation_adjustment.adjust_all(actual_function_name, file_path_old, file_path_new)
-        
-        # 调用数据分析模块
-        self.data_analysis.analyze_all()
-
+        """Run optimization process with specified function"""
+        actual_function_name = FUNCTION_MAPPING.get(sp_function)
+        if actual_function_name:
+            self.automation_adjustment.adjust_all(actual_function_name, file_path_old, file_path_new)
+            self.data_analysis.analyze_all()
 
 def validate_threshold(value, value_type, min_val=None, max_val=None):
-    """验证输入阈值的工具函数"""
-    if value in [None, ""]:  # 直接处理空值
+    """Validate input threshold values
+    
+    Args:
+        value: Input value to validate
+        value_type: Expected type of the value
+        min_val: Minimum allowed value
+        max_val: Maximum allowed value
+    
+    Returns:
+        Validated value or None if invalid
+    """
+    if not value:
         return None
 
     try:
         value = value_type(value)
         if min_val is not None and value < min_val:
-            raise ValueError(f"值 {value} 小于最小值 {min_val}")
+            raise ValueError("Value {0} is below minimum {1}".format(value, min_val))
         if max_val is not None and value > max_val:
-            raise ValueError(f"值 {value} 超过最大值 {max_val}")
+            raise ValueError("Value {0} exceeds maximum {1}".format(value, max_val))
         return value
     except (ValueError, TypeError) as e:
-        print(f"超过阈值: {e}")
+        print("Threshold validation error: {0}".format(e))
         return None
 
-
 def start_file_cleanup():
-    """后台线程：定期清理超过存活时间的旧文件"""
+    """Background thread for cleaning up old files"""
     while True:
         try:
             now = datetime.now()
@@ -81,15 +87,16 @@ def start_file_cleanup():
                     file_mtime = datetime.fromtimestamp(os.path.getmtime(file_path))
                     if now - file_mtime > timedelta(hours=FILE_RETENTION_HOURS):
                         os.remove(file_path)
-                        print(f"已删除过期文件: {file_path}")
+                        print("Deleted expired file: {0}".format(file_path))
         except Exception as e:
-            print(f"清理文件时发生错误: {e}")
-        time.sleep(600)  # 每小时检查一次
-
+            print("Error during file cleanup: {0}".format(e))
+        time.sleep(600)  # Check every 10 minutes
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    """Main route handler for the application"""
     if request.method == 'POST':
+        # Define threshold configurations
         thresholds = {
             "impress_threshold": ("impress", int, 0, None),
             "click_threshold": ("click", int, 0, None),
@@ -102,67 +109,66 @@ def index():
             "cpc_threshold": ("cpc", float, 0.0, None),
             "roas_threshold": ("roas", float, 0.0, None),
         }
+
+        # Update configuration with validated threshold values
         for field, (config_attr, value_type, min_val, max_val) in thresholds.items():
-            if field_value := validate_threshold(request.form.get(field), value_type, min_val, max_val):
+            field_value = validate_threshold(request.form.get(field), value_type, min_val, max_val)
+            if field_value:
                 setattr(config, config_attr, field_value)
 
-        # 提取 SKU
-        if sku := request.form.get('sku'):
+        # Update SKU if provided
+        sku = request.form.get('sku')
+        if sku:
             config.sku = str(sku)
 
-        # 处理文件上传
+        # Handle file uploads
         if 'file' not in request.files:
-            return "请选择一个文件！"
-        
+            return "Please select a file!"
+
         file_new = request.files['file']
-        file_old = request.files.get('file_old')  # 使用 get 方法，如果没有 file_old 则返回 None
-        
-        if file_new.filename == '':
-            return "请选择一个文件！"
-        
-        if file_new:
-            # 保存新文件
-            filename_new = secure_filename(file_new.filename)
-            file_path_new = os.path.join(UPLOAD_FOLDER, filename_new)
-            file_new.save(file_path_new)
+        file_old = request.files.get('file_old')
 
-            file_path_old = None
-            if file_old and file_old.filename != '':
-                # 保存旧文件（如果有）
-                filename_old = secure_filename(file_old.filename)
-                file_path_old = os.path.join(UPLOAD_FOLDER, filename_old)
-                file_old.save(file_path_old)
+        if not file_new.filename:
+            return "Please select a file!"
 
-            # 数据加载与优化
-            optimization_system = AmazonAdOptimizationSystem(file_path_new)
-            sp_function_name_cn = request.form.get('sp_function')
-            
-            optimization_system.run_optimization(sp_function_name_cn, file_path_old, file_path_new)
+        # Save new file
+        filename_new = secure_filename(file_new.filename)
+        file_path_new = os.path.join(UPLOAD_FOLDER, filename_new)
+        file_new.save(file_path_new)
 
-            # 优化后的文件路径
-            new_file_path = file_path_new.rsplit('.', 1)[0] + '_' + sp_function_name_cn + '.xlsx'
-            return render_template('index.html', download_link=new_file_path)
-    
+        # Save old file if provided
+        file_path_old = None
+        if file_old and file_old.filename:
+            filename_old = secure_filename(file_old.filename)
+            file_path_old = os.path.join(UPLOAD_FOLDER, filename_old)
+            file_old.save(file_path_old)
+
+        # Run optimization
+        optimization_system = AmazonAdOptimizationSystem(file_path_new)
+        sp_function_name_cn = request.form.get('sp_function')
+        optimization_system.run_optimization(sp_function_name_cn, file_path_old, file_path_new)
+
+        # Generate download link
+        base_name = file_path_new.rsplit('.', 1)[0]
+        new_file_path = "{0}_{1}.xlsx".format(base_name, sp_function_name_cn)
+        return render_template('index.html', download_link=new_file_path)
+
     return render_template('index.html')
 
-
 @app.route('/download/<path:filename>', methods=['GET'])
-async def download_file(filename):
-    """处理文件下载"""
+def download_file(filename):
+    """Handle file downloads"""
     file_path = os.path.join(UPLOAD_FOLDER, os.path.basename(filename))
-    print(f"尝试下载文件，路径为: {file_path}")
     try:
-        return await asyncio.to_thread(send_file, file_path, as_attachment=True)
-    except FileNotFoundError:
-        return "文件未找到！", 404
+        return send_file(file_path, as_attachment=True)
     except Exception as e:
-        return f"下载失败：{e}", 500
-
+        return "Download failed: {0}".format(e), 500
 
 if __name__ == '__main__':
-    # 启动后台清理线程
-    cleanup_thread = threading.Thread(target=start_file_cleanup, daemon=True)
+    # Start background cleanup thread
+    cleanup_thread = threading.Thread(target=start_file_cleanup)
+    cleanup_thread.daemon = True
     cleanup_thread.start()
 
-    # 启动 Flask 应用
+    # Start Flask application
     app.run(host="0.0.0.0", debug=True)
